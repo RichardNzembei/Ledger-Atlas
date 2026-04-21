@@ -1,64 +1,131 @@
 <template>
   <div>
-    <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold">Business Rules</h1>
-      <UButton icon="i-heroicons-plus" @click="showCreate = true">New Rule</UButton>
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+      <h1 style="font-size:1.25rem;font-weight:700;color:#fff;margin:0">Business Rules</h1>
+      <button
+        style="background:#f97316;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:0.875rem;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px"
+        @click="showCreate = true"
+      >
+        <span style="font-size:1rem;line-height:1">+</span> New Rule
+      </button>
     </div>
 
     <!-- Engine tabs -->
-    <UTabs v-model="activeEngine" :items="engineTabs" class="mb-4" />
+    <div style="display:flex;gap:4px;margin-bottom:16px;background:#111;border:1px solid #222;border-radius:10px;padding:4px;width:fit-content">
+      <button
+        v-for="(tab, i) in engineTabs"
+        :key="tab.label"
+        style="border:none;border-radius:7px;padding:6px 14px;font-size:0.8rem;font-weight:500;cursor:pointer;transition:background 0.15s,color 0.15s"
+        :style="activeEngine === i
+          ? 'background:#f97316;color:#fff'
+          : 'background:transparent;color:#71717a'"
+        @click="activeEngine = i"
+      >
+        {{ tab.label }}
+      </button>
+    </div>
 
-    <UCard>
-      <UTable :rows="filteredRules" :columns="columns" :loading="pending">
-        <template #engine-data="{ row }">
-          <UBadge :color="engineColor(row.engine)" :label="row.engine" variant="soft" />
-        </template>
-        <template #isActive-data="{ row }">
-          <UBadge :color="row.isActive ? 'green' : 'gray'" :label="row.isActive ? 'Active' : 'Draft'" />
-        </template>
-        <template #actions-data="{ row }">
-          <div class="flex gap-1">
-            <UButton
-              v-if="!row.isActive"
-              size="xs"
-              color="green"
-              variant="ghost"
-              label="Activate"
-              @click="activateRule(row.id)"
-            />
-            <UButton
-              v-else
-              size="xs"
-              color="orange"
-              variant="ghost"
-              label="Deactivate"
-              @click="deactivateRule(row.id)"
-            />
-          </div>
-        </template>
-      </UTable>
-    </UCard>
+    <!-- Table card -->
+    <div style="background:#1a1a1a;border:1px solid #222;border-radius:12px;overflow:hidden">
+      <div v-if="pending" style="padding:40px;text-align:center;color:#71717a;font-size:0.875rem">
+        Loading…
+      </div>
+      <table v-else style="width:100%;border-collapse:collapse">
+        <thead>
+          <tr>
+            <th v-for="col in columns" :key="col.key"
+              style="padding:10px 16px;text-align:left;font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#52525b;border-bottom:1px solid #1e1e1e"
+            >{{ col.label }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="row in filteredRules"
+            :key="row.id"
+            style="border-bottom:1px solid #1e1e1e;transition:background 0.1s"
+            @mouseenter="($event.currentTarget as HTMLElement).style.background='rgba(255,255,255,0.02)'"
+            @mouseleave="($event.currentTarget as HTMLElement).style.background='transparent'"
+          >
+            <td style="padding:12px 16px;color:#e5e5e5;font-size:0.875rem">{{ row.name }}</td>
+            <td style="padding:12px 16px">
+              <span :style="engineBadgeStyle(row.engine)" style="border-radius:6px;padding:2px 8px;font-size:0.75rem;font-weight:500">
+                {{ row.engine }}
+              </span>
+            </td>
+            <td style="padding:12px 16px;color:#71717a;font-size:0.875rem">{{ row.triggerEvent }}</td>
+            <td style="padding:12px 16px;color:#e5e5e5;font-size:0.875rem">{{ row.priority }}</td>
+            <td style="padding:12px 16px">
+              <span
+                :style="row.isActive
+                  ? 'background:rgba(34,197,94,0.12);color:#4ade80'
+                  : 'background:rgba(113,113,122,0.15);color:#71717a'"
+                style="border-radius:6px;padding:2px 8px;font-size:0.75rem;font-weight:500"
+              >
+                {{ row.isActive ? 'Active' : 'Draft' }}
+              </span>
+            </td>
+            <td style="padding:12px 16px">
+              <button
+                v-if="!row.isActive"
+                style="background:rgba(34,197,94,0.1);color:#4ade80;border:none;border-radius:6px;padding:4px 10px;font-size:0.75rem;cursor:pointer;font-weight:500"
+                @click="activateRule(row.id)"
+              >Activate</button>
+              <button
+                v-else
+                style="background:rgba(249,115,22,0.1);color:#f97316;border:none;border-radius:6px;padding:4px 10px;font-size:0.75rem;cursor:pointer;font-weight:500"
+                @click="deactivateRule(row.id)"
+              >Deactivate</button>
+            </td>
+          </tr>
+          <tr v-if="filteredRules.length === 0">
+            <td :colspan="columns.length" style="padding:40px;text-align:center;color:#71717a;font-size:0.875rem">
+              No rules found.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
     <!-- Create rule modal -->
     <UModal v-model="showCreate" :ui="{ width: 'sm:max-w-2xl' }">
-      <UCard>
-        <template #header>
-          <div class="flex items-center justify-between">
-            <h2 class="text-lg font-semibold">New Rule</h2>
-            <UButton icon="i-heroicons-sparkles" variant="ghost" size="sm" @click="showAiAssist = !showAiAssist">
-              AI Assist
-            </UButton>
-          </div>
-        </template>
-
-        <div v-if="showAiAssist" class="mb-4 p-4 bg-purple-50 dark:bg-purple-950 rounded-lg">
-          <p class="text-sm font-medium mb-2">Describe the rule in plain English</p>
-          <UTextarea v-model="nlDescription" placeholder="e.g. When a retail customer buys more than 10 units of any product in the Dairy category, apply a 5% discount." />
-          <UButton class="mt-2" size="sm" :loading="aiLoading" @click="generateRule">Generate</UButton>
+      <div style="background:#1a1a1a;border-radius:12px;overflow:hidden">
+        <!-- Modal header -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #222">
+          <h2 style="margin:0;font-size:1rem;font-weight:600;color:#fff">New Rule</h2>
+          <button
+            style="background:rgba(168,85,247,0.1);color:#a855f7;border:none;border-radius:6px;padding:5px 10px;font-size:0.75rem;cursor:pointer;font-weight:500;display:flex;align-items:center;gap:4px"
+            @click="showAiAssist = !showAiAssist"
+          >
+            ✦ AI Assist
+          </button>
         </div>
 
-        <RuleForm :initial="newRule" @saved="onSaved" @cancel="showCreate = false" />
-      </UCard>
+        <div style="padding:20px">
+          <!-- AI assist panel -->
+          <div v-if="showAiAssist" style="margin-bottom:16px;padding:16px;background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.2);border-radius:10px">
+            <p style="margin:0 0 8px;font-size:0.875rem;font-weight:500;color:#e5e5e5">Describe the rule in plain English</p>
+            <textarea
+              v-model="nlDescription"
+              placeholder="e.g. When a retail customer buys more than 10 units of any product in the Dairy category, apply a 5% discount."
+              rows="3"
+              style="background:#111;border:1px solid #2a2a2a;border-radius:8px;padding:8px 12px;font-size:0.875rem;color:#e5e5e5;outline:none;width:100%;box-sizing:border-box;resize:vertical;font-family:inherit"
+              @focus="($event.target as HTMLTextAreaElement).style.borderColor='#f97316'"
+              @blur="($event.target as HTMLTextAreaElement).style.borderColor='#2a2a2a'"
+            />
+            <button
+              style="margin-top:8px;background:#f97316;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:0.875rem;font-weight:500;cursor:pointer"
+              :disabled="aiLoading"
+              :style="aiLoading ? 'opacity:0.6' : ''"
+              @click="generateRule"
+            >
+              {{ aiLoading ? 'Generating…' : 'Generate' }}
+            </button>
+          </div>
+
+          <RuleForm :initial="newRule" @saved="onSaved" @cancel="showCreate = false" />
+        </div>
+      </div>
     </UModal>
   </div>
 </template>
@@ -87,7 +154,7 @@ const engineTabs = [
 const { data: rules, pending, refresh } = await useAsyncData(
   'rules',
   () => api<RuleResponse[]>('/api/v1/metadata/rules'),
-  { default: () => [] as RuleResponse[] },
+  { server: false, default: () => [] as RuleResponse[] },
 );
 
 const filteredRules = computed(() => {
@@ -128,6 +195,16 @@ function engineColor(engine: string) {
     policy: 'red',
   };
   return map[engine] ?? 'gray';
+}
+
+function engineBadgeStyle(engine: string) {
+  const map: Record<string, string> = {
+    reactive: 'background:rgba(59,130,246,0.12);color:#60a5fa',
+    decision: 'background:rgba(168,85,247,0.12);color:#c084fc',
+    validation: 'background:rgba(234,179,8,0.12);color:#facc15',
+    policy: 'background:rgba(239,68,68,0.12);color:#f87171',
+  };
+  return map[engine] ?? 'background:rgba(113,113,122,0.15);color:#71717a';
 }
 
 const columns = [
