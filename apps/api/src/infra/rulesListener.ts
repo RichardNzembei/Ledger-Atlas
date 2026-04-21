@@ -1,5 +1,5 @@
 import { and, eq } from 'drizzle-orm';
-import { ruleDefinitions } from '@inventory/db/schema';
+import { ruleDefinitions, domainEvents } from '@inventory/db/schema';
 import {
   RuleRegistry,
   ReactiveRuleEvaluator,
@@ -8,7 +8,7 @@ import {
   PolicyRuleEvaluator,
   RuleDefinitionSchema,
 } from '@inventory/rules';
-import { binaryToUuid } from '@inventory/domain/utils';
+import { binaryToUuid, uuidv7, uuidToBinary } from '@inventory/domain/utils';
 import { db } from './db.js';
 import { eventBus } from './eventBus.js';
 import { logger } from './logger.js';
@@ -164,6 +164,24 @@ function rebindSubscriptions() {
             facts,
             rule,
           });
+
+          void db.insert(domainEvents).values({
+            tenantId: event.tenantId as unknown as Buffer,
+            streamType: 'rule_execution',
+            streamId: uuidToBinary(uuidv7()),
+            version: 1,
+            eventType: 'rule.evaluated',
+            payload: {
+              ruleId: rule.id,
+              ruleName: rule.name,
+              engine: 'reactive',
+              trigger: event.type,
+              result: 'fired',
+              actionCount: actions.length,
+              durationMs,
+            },
+            metadata: {},
+          }).catch(() => undefined);
         }
       } catch (err) {
         logger.error(
