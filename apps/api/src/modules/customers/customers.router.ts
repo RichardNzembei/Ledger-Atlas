@@ -6,9 +6,10 @@ import {
   UpdateCustomerRequest,
   CustomerListQuery,
 } from '@inventory/contracts/customers';
-import { NotFoundError } from '@inventory/domain/errors';
+import { NotFoundError, ValidationError } from '@inventory/domain/errors';
 import { uuidv7, uuidToBinary, binaryToUuid } from '@inventory/domain/utils';
 import { db } from '../../infra/db.js';
+import { checkValidation } from '../../infra/ruleEnforcer.js';
 
 export const customersRouter = Router();
 
@@ -51,6 +52,28 @@ customersRouter.post('/', async (req, res, next) => {
   try {
     const body = CreateCustomerRequest.parse(req.body);
     const tenantId = req.context.tenantId;
+
+    // Validation rules: duplicate phone check (recipe 15), and any customer.create rules
+    const existingByPhone = body.phone
+      ? await db
+          .select({ id: customers.id, name: customers.name })
+          .from(customers)
+          .where(and(eq(customers.tenantId, tenantId), eq(customers.phone, body.phone)))
+          .limit(1)
+          .then((rows) => rows[0] ?? null)
+      : null;
+
+    const violations = await checkValidation(tenantId, 'customer', 'create', {
+      phone: body.phone ?? null,
+      email: body.email ?? null,
+      name: body.name,
+      existing_customer_by_phone: existingByPhone,
+    });
+    if (violations.length > 0) {
+      const v = violations[0]!;
+      throw new ValidationError(v.errorMessage ?? 'Validation failed', v.errorCode ? { rule: v.errorCode } : undefined);
+    }
+
     const id = uuidToBinary(uuidv7());
 
     await db.transaction(async (tx) => {
