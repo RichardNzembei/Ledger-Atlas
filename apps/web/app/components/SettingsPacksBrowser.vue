@@ -169,6 +169,11 @@ async function installPack(pack: SettingsPack) {
       installing.value = new Map(installing.value).set(pack.id, { ...progress, error: `Bad JSON for key ${setting.key}` });
       return;
     }
+    if (value === null) {
+      progress.done++;
+      installing.value = new Map(installing.value).set(pack.id, { ...progress });
+      continue;
+    }
     try {
       await api('/api/v1/settings', {
         method: 'POST',
