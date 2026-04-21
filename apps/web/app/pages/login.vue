@@ -1,46 +1,86 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 p-4">
-    <UCard class="w-full max-w-md">
-      <template #header>
-        <div class="text-center">
-          <h1 class="text-2xl font-bold">{{ config.public.appName }}</h1>
-          <p class="text-gray-500 mt-1 text-sm">Sign in to your account</p>
+  <div style="background:#0f0f0f;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px">
+    <div style="width:100%;max-width:380px;margin:0 auto">
+      <!-- Card -->
+      <div style="background:#111;border:1px solid #222;border-radius:16px;overflow:hidden">
+        <!-- Card header -->
+        <div style="padding:32px 32px 24px;text-align:center;border-bottom:1px solid #1a1a1a">
+          <h1 style="margin:0 0 6px;font-size:1.5rem;font-weight:800;color:#f97316;letter-spacing:-0.02em">
+            {{ config.public.appName }}
+          </h1>
+          <p style="margin:0;font-size:0.875rem;color:#71717a">Sign in to your account</p>
         </div>
-      </template>
 
-      <UForm :schema="schema" :state="form" class="space-y-4" @submit="onSubmit">
-        <UFormGroup label="Workspace" name="tenantSlug">
-          <UInput
-            v-model="form.tenantSlug"
-            placeholder="your-company"
-            autocomplete="organization"
-          />
-        </UFormGroup>
+        <!-- Form -->
+        <form style="padding:28px 32px 32px" @submit.prevent="onSubmit">
+          <!-- Workspace -->
+          <div style="margin-bottom:18px">
+            <label style="display:block;font-size:0.8rem;font-weight:500;color:#a3a3a3;margin-bottom:6px">
+              Workspace
+            </label>
+            <input
+              v-model="form.tenantSlug"
+              type="text"
+              placeholder="your-company"
+              autocomplete="organization"
+              style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:9px 12px;font-size:0.875rem;color:#e5e5e5;outline:none;width:100%;box-sizing:border-box;transition:border-color 0.15s"
+              @focus="($event.target as HTMLInputElement).style.borderColor='#f97316'"
+              @blur="($event.target as HTMLInputElement).style.borderColor='#2a2a2a'"
+            />
+          </div>
 
-        <UFormGroup label="Email" name="email">
-          <UInput
-            v-model="form.email"
-            type="email"
-            autocomplete="email"
-            placeholder="admin@example.com"
-          />
-        </UFormGroup>
+          <!-- Email -->
+          <div style="margin-bottom:18px">
+            <label style="display:block;font-size:0.8rem;font-weight:500;color:#a3a3a3;margin-bottom:6px">
+              Email
+            </label>
+            <input
+              v-model="form.email"
+              type="email"
+              placeholder="admin@example.com"
+              autocomplete="email"
+              style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:9px 12px;font-size:0.875rem;color:#e5e5e5;outline:none;width:100%;box-sizing:border-box;transition:border-color 0.15s"
+              @focus="($event.target as HTMLInputElement).style.borderColor='#f97316'"
+              @blur="($event.target as HTMLInputElement).style.borderColor='#2a2a2a'"
+            />
+          </div>
 
-        <UFormGroup label="Password" name="password">
-          <UInput
-            v-model="form.password"
-            type="password"
-            autocomplete="current-password"
-          />
-        </UFormGroup>
+          <!-- Password -->
+          <div style="margin-bottom:24px">
+            <label style="display:block;font-size:0.8rem;font-weight:500;color:#a3a3a3;margin-bottom:6px">
+              Password
+            </label>
+            <input
+              v-model="form.password"
+              type="password"
+              autocomplete="current-password"
+              style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:9px 12px;font-size:0.875rem;color:#e5e5e5;outline:none;width:100%;box-sizing:border-box;transition:border-color 0.15s"
+              @focus="($event.target as HTMLInputElement).style.borderColor='#f97316'"
+              @blur="($event.target as HTMLInputElement).style.borderColor='#2a2a2a'"
+            />
+          </div>
 
-        <UAlert v-if="error" color="red" :description="error" icon="i-heroicons-exclamation-circle" />
+          <!-- Error alert -->
+          <div
+            v-if="error"
+            style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:8px;padding:10px 14px;margin-bottom:18px;display:flex;align-items:center;gap:8px"
+          >
+            <span style="color:#f87171;font-size:0.875rem">⚠</span>
+            <p style="margin:0;font-size:0.875rem;color:#f87171">{{ error }}</p>
+          </div>
 
-        <UButton type="submit" block :loading="loading">
-          Sign in
-        </UButton>
-      </UForm>
-    </UCard>
+          <!-- Submit -->
+          <button
+            type="submit"
+            style="background:#f97316;color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:0.875rem;font-weight:600;cursor:pointer;width:100%;transition:opacity 0.15s;letter-spacing:0.01em"
+            :style="loading ? 'opacity:0.65;cursor:not-allowed' : ''"
+            :disabled="loading"
+          >
+            {{ loading ? 'Signing in…' : 'Sign in' }}
+          </button>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
