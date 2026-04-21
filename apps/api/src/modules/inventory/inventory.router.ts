@@ -10,7 +10,7 @@ import { inventoryService } from './inventory.service.js';
 import { requireRole } from '../../middleware/requireRole.js';
 import { checkPolicy } from '../../infra/ruleEnforcer.js';
 
-export const inventoryRouter = Router();
+export const inventoryRouter: Router = Router();
 
 inventoryRouter.get('/stock', async (req, res, next) => {
   try {
@@ -53,7 +53,7 @@ inventoryRouter.post(
 // Time-travel: replay event stream for a product to see full history
 inventoryRouter.get('/stock/:productId/replay', requireRole('admin', 'manager'), async (req, res, next) => {
   try {
-    const result = await inventoryService.replayStream(req.context.tenantId, req.params['productId']!);
+    const result = await inventoryService.replayStream(req.context.tenantId, (req.params['productId'] as string));
     res.json(result);
   } catch (err) {
     next(err);

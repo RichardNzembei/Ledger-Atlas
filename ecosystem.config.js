@@ -3,7 +3,8 @@ module.exports = {
     {
       name: 'ledger-atlas-api',
       script: 'apps/api/dist/main.js',
-      cwd: '/opt/ledger-atlas',
+      cwd: __dirname,
+      exec_mode: 'fork',
       env_production: {
         NODE_ENV: 'production',
       },

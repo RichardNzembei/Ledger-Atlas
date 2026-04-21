@@ -51,7 +51,7 @@ async function loadRules(tenantId: Buffer): Promise<RuleDefinitionSchema[]> {
   const rows = await db
     .select()
     .from(ruleDefinitions)
-    .where(and(eq(ruleDefinitions.tenantId, tenantId as unknown as string), eq(ruleDefinitions.isActive, true)));
+    .where(and(eq(ruleDefinitions.tenantId, tenantId), eq(ruleDefinitions.isActive, true)));
 
   const parsed: RuleDefinitionSchema[] = [];
   for (const row of rows) {

@@ -2,7 +2,12 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src"
+    "rootDir": "./src",
+    // Zod's .optional() outputs `T | undefined` rather than an optional key,
+    // which collides with exactOptionalPropertyTypes on every parsed query/body
+    // passed to services. Disabling here keeps the app code idiomatic; other
+    // packages (contracts, db, domain) retain the strict flag via the base.
+    "exactOptionalPropertyTypes": false
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]
