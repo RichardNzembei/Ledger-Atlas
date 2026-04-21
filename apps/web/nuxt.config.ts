@@ -3,6 +3,10 @@ export default defineNuxtConfig({
 
   srcDir: 'app',
 
+  nitro: {
+    preset: 'vercel',
+  },
+
   modules: [
     '@pinia/nuxt',
     '@nuxt/ui',
