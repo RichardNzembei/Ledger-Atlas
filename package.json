@@ -1,0 +1,29 @@
+{
+  "name": "inventory-platform",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "test:int": "pnpm -r test:int",
+    "type-check": "pnpm -r type-check",
+    "db:diff": "atlas migrate diff --env local",
+    "db:apply": "atlas migrate apply --env local",
+    "db:inspect": "atlas schema inspect --env local",
+    "db:lint": "atlas migrate lint --env local --latest 1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0",
+    "prettier": "^3.3.0",
+    "eslint": "^9.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}

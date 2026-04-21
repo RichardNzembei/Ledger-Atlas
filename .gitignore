@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.output/
+.nuxt/
+.nitro/
+*.tsbuildinfo
+.env
+.env.local
+.env.*.local
+*.log
+coverage/
+.DS_Store
+.turbo/

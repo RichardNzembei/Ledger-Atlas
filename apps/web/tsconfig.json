@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "jsx": "preserve",
+    "noEmit": true,
+    "paths": {
+      "@inventory/contracts": ["../../packages/contracts/src/index.ts"],
+      "@inventory/domain": ["../../packages/domain/src/index.ts"],
+      "@inventory/events": ["../../packages/events/src/index.ts"]
+    }
+  },
+  "include": ["app/**/*", "nuxt.config.ts", ".nuxt/types/**/*"]
+}

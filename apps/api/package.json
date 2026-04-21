@@ -1,0 +1,52 @@
+{
+  "name": "@inventory/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/main.js",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "build": "tsc",
+    "start": "node dist/main.js",
+    "test": "vitest run",
+    "test:int": "vitest run --config vitest.int.config.ts",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@inventory/contracts": "workspace:*",
+    "@inventory/db": "workspace:*",
+    "@inventory/domain": "workspace:*",
+    "@inventory/events": "workspace:*",
+    "@inventory/rules": "workspace:*",
+    "argon2": "^0.41.0",
+    "drizzle-orm": "^0.36.0",
+    "mysql2": "^3.11.0",
+    "bullmq": "^5.0.0",
+    "casbin": "^5.30.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.0",
+    "express": "^5.0.0",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "ioredis": "^5.4.0",
+    "pino": "^9.5.0",
+    "pino-http": "^10.3.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@testcontainers/mysql": "^10.0.0",
+    "@testcontainers/redis": "^10.0.0",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^22.0.0",
+    "supertest": "^7.0.0",
+    "@types/supertest": "^6.0.2",
+    "pino-pretty": "^13.0.0",
+    "testcontainers": "^10.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.0.0"
+  }
+}

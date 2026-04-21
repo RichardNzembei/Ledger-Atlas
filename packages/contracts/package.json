@@ -1,0 +1,31 @@
+{
+  "name": "@inventory/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./auth": "./dist/auth.js",
+    "./products": "./dist/products.js",
+    "./inventory": "./dist/inventory.js",
+    "./customers": "./dist/customers.js",
+    "./assets": "./dist/assets.js",
+    "./sales": "./dist/sales.js",
+    "./metadata": "./dist/metadata.js",
+    "./settings": "./dist/settings.js",
+    "./payments": "./dist/payments.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0"
+  }
+}
