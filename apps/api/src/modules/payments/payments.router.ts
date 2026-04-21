@@ -11,7 +11,7 @@ import { EventTypes } from '@inventory/events';
 import { config } from '../../config/index.js';
 import { logger } from '../../infra/logger.js';
 
-export const paymentsRouter = Router();
+export const paymentsRouter: Router = Router();
 
 paymentsRouter.post('/mpesa/stk-push', async (req, res, next) => {
   try {

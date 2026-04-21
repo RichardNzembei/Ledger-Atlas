@@ -7,7 +7,7 @@ import { uuidv7, uuidToBinary, binaryToUuid } from '@inventory/domain/utils';
 import { db } from '../../infra/db.js';
 import { requireRole } from '../../middleware/requireRole.js';
 
-export const locationsRouter = Router();
+export const locationsRouter: Router = Router();
 
 const CreateLocationRequest = z.object({
   code: z.string().min(1).max(50).trim(),
@@ -58,13 +58,13 @@ locationsRouter.post('/', requireRole('admin', 'manager'), async (req, res, next
 
 locationsRouter.get('/:id', async (req, res, next) => {
   try {
-    const id = uuidToBinary(req.params['id']!);
+    const id = uuidToBinary((req.params['id'] as string));
     const rows = await db
       .select()
       .from(locations)
       .where(and(eq(locations.id, id), eq(locations.tenantId, req.context.tenantId)))
       .limit(1);
-    if (!rows[0]) throw new NotFoundError('Location', req.params['id']!);
+    if (!rows[0]) throw new NotFoundError('Location', (req.params['id'] as string));
     res.json(toResponse(rows[0]));
   } catch (err) {
     next(err);
@@ -73,7 +73,7 @@ locationsRouter.get('/:id', async (req, res, next) => {
 
 locationsRouter.patch('/:id', requireRole('admin', 'manager'), async (req, res, next) => {
   try {
-    const id = uuidToBinary(req.params['id']!);
+    const id = uuidToBinary((req.params['id'] as string));
     const body = UpdateLocationRequest.parse(req.body);
 
     const existing = await db
@@ -81,7 +81,7 @@ locationsRouter.patch('/:id', requireRole('admin', 'manager'), async (req, res, 
       .from(locations)
       .where(and(eq(locations.id, id), eq(locations.tenantId, req.context.tenantId)))
       .limit(1);
-    if (!existing[0]) throw new NotFoundError('Location', req.params['id']!);
+    if (!existing[0]) throw new NotFoundError('Location', (req.params['id'] as string));
 
     const updates: Record<string, unknown> = {};
     if (body.name !== undefined) updates['name'] = body.name;
@@ -106,7 +106,7 @@ locationsRouter.patch('/:id', requireRole('admin', 'manager'), async (req, res, 
 
 locationsRouter.delete('/:id', requireRole('admin'), async (req, res, next) => {
   try {
-    const id = uuidToBinary(req.params['id']!);
+    const id = uuidToBinary((req.params['id'] as string));
     await db
       .update(locations)
       .set({ isActive: false })

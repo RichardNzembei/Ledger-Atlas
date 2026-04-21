@@ -3,7 +3,7 @@ import { UpsertSettingRequest, SettingQuery } from '@inventory/contracts/setting
 import { settingsService } from './settings.service.js';
 import { requireAdmin } from '../../middleware/requireRole.js';
 
-export const settingsRouter = Router();
+export const settingsRouter: Router = Router();
 
 settingsRouter.get('/', async (req, res, next) => {
   try {

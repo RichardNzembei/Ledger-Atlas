@@ -60,13 +60,13 @@ export class AuthService {
         name: user.displayName,
       },
       config.JWT_SECRET,
-      { expiresIn: config.JWT_EXPIRES_IN },
+      { expiresIn: config.JWT_EXPIRES_IN } as jwt.SignOptions,
     );
 
     const refreshToken = jwt.sign(
       { sub: userId, tid: tenantIdStr, type: 'refresh' },
       config.JWT_SECRET,
-      { expiresIn: config.REFRESH_TOKEN_EXPIRES_IN },
+      { expiresIn: config.REFRESH_TOKEN_EXPIRES_IN } as jwt.SignOptions,
     );
 
     await db
@@ -175,7 +175,7 @@ export class AuthService {
           name: user.displayName,
         },
         config.JWT_SECRET,
-        { expiresIn: config.JWT_EXPIRES_IN },
+        { expiresIn: config.JWT_EXPIRES_IN } as jwt.SignOptions,
       );
 
       return { token: newToken, expiresIn: 86400 };
