@@ -12,7 +12,7 @@ import { requireRole } from '../../middleware/requireRole.js';
 import { salesService } from './sales.service.js';
 import { checkPolicy } from '../../infra/ruleEnforcer.js';
 
-export const salesRouter = Router();
+export const salesRouter: Router = Router();
 
 salesRouter.get('/', async (req, res, next) => {
   try {
@@ -36,7 +36,7 @@ salesRouter.post('/', requireRole('admin', 'manager', 'cashier'), async (req, re
 
 salesRouter.get('/:id', async (req, res, next) => {
   try {
-    const id = uuidToBinary(req.params['id']!);
+    const id = uuidToBinary((req.params['id'] as string));
     const sale = await salesService.getSale(req.context.tenantId, id);
     res.json(sale);
   } catch (err) {

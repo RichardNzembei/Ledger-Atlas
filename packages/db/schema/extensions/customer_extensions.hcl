@@ -1,8 +1,14 @@
 table "customer_extensions" {
   schema = schema.inventory
 
-  column "customer_id" { null = false  type = binary(16) }
-  column "tenant_id"   { null = false  type = binary(16) }
+  column "customer_id" {
+    null = false
+    type = binary(16)
+  }
+  column "tenant_id" {
+    null = false
+    type = binary(16)
+  }
   column "custom"      {
     null    = false
     type    = json

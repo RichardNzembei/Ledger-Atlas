@@ -14,7 +14,7 @@ import { reloadRules } from '../../infra/rulesListener.js';
 import { invalidateEnforcerCache } from '../../infra/ruleEnforcer.js';
 import { requireAdmin } from '../../middleware/requireRole.js';
 
-export const metadataRouter = Router();
+export const metadataRouter: Router = Router();
 
 // ---- Audit helper ----
 
@@ -222,14 +222,14 @@ metadataRouter.post('/rules', requireAdmin, async (req, res, next) => {
 
 metadataRouter.post('/rules/:id/activate', requireAdmin, async (req, res, next) => {
   try {
-    const id = uuidToBinary(req.params['id']!);
+    const id = uuidToBinary((req.params['id'] as string));
     const existing = await db
       .select()
       .from(ruleDefinitions)
       .where(and(eq(ruleDefinitions.id, id), eq(ruleDefinitions.tenantId, req.context.tenantId)))
       .limit(1);
 
-    if (!existing[0]) throw new NotFoundError('Rule', req.params['id']!);
+    if (!existing[0]) throw new NotFoundError('Rule', (req.params['id'] as string));
 
     await db
       .update(ruleDefinitions)

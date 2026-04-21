@@ -7,7 +7,7 @@ import {
 import { productsRepo } from './products.repository.js';
 import { requireRole } from '../../middleware/requireRole.js';
 
-export const productsRouter = Router();
+export const productsRouter: Router = Router();
 
 productsRouter.get('/', async (req, res, next) => {
   try {
@@ -35,7 +35,7 @@ productsRouter.post('/', requireRole('admin', 'manager', 'stock_manager'), async
 
 productsRouter.get('/:id', async (req, res, next) => {
   try {
-    const product = await productsRepo.findById(req.context.tenantId, req.params['id']!);
+    const product = await productsRepo.findById(req.context.tenantId, (req.params['id'] as string));
     res.json(product);
   } catch (err) {
     next(err);
@@ -45,7 +45,7 @@ productsRouter.get('/:id', async (req, res, next) => {
 productsRouter.patch('/:id', requireRole('admin', 'manager', 'stock_manager'), async (req, res, next) => {
   try {
     const body = UpdateProductRequest.parse(req.body);
-    const product = await productsRepo.update(req.context.tenantId, req.params['id']!, body);
+    const product = await productsRepo.update(req.context.tenantId, (req.params['id'] as string), body);
     res.json(product);
   } catch (err) {
     next(err);
@@ -54,7 +54,7 @@ productsRouter.patch('/:id', requireRole('admin', 'manager', 'stock_manager'), a
 
 productsRouter.delete('/:id', requireRole('admin', 'manager'), async (req, res, next) => {
   try {
-    await productsRepo.deactivate(req.context.tenantId, req.params['id']!);
+    await productsRepo.deactivate(req.context.tenantId, (req.params['id'] as string));
     res.status(204).send();
   } catch (err) {
     next(err);
