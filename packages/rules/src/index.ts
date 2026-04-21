@@ -77,4 +77,10 @@ export class RuleRegistry {
 }
 
 export { ReactiveRuleEvaluator } from './adapters/reactive.js';
+export type { ReactiveOutput } from './adapters/reactive.js';
 export { DecisionTableEvaluator } from './adapters/decision.js';
+export type { DecisionOutput } from './adapters/decision.js';
+export { ValidationRuleEvaluator } from './adapters/validation.js';
+export type { ValidationOutput } from './adapters/validation.js';
+export { PolicyRuleEvaluator } from './adapters/policy.js';
+export type { PolicyOutput } from './adapters/policy.js';
