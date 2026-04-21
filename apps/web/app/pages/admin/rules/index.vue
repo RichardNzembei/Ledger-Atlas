@@ -56,7 +56,14 @@
             @mouseenter="($event.currentTarget as HTMLElement).style.background='rgba(255,255,255,0.02)'"
             @mouseleave="($event.currentTarget as HTMLElement).style.background='transparent'"
           >
-            <td style="padding:12px 16px;color:#e5e5e5;font-size:0.875rem">{{ row.name }}</td>
+            <td style="padding:12px 16px;color:#e5e5e5;font-size:0.875rem">
+              {{ row.name }}
+              <span
+                v-if="isParseError(row)"
+                style="margin-left:6px;background:rgba(239,68,68,0.12);color:#f87171;border-radius:4px;padding:1px 6px;font-size:0.68rem;font-weight:600;vertical-align:middle"
+                title="Rule body is missing required structure — rule will be skipped at runtime"
+              >parse error</span>
+            </td>
             <td style="padding:12px 16px">
               <span :style="engineBadgeStyle(row.engine)" style="border-radius:6px;padding:2px 8px;font-size:0.75rem;font-weight:500">
                 {{ row.engine }}
@@ -75,16 +82,23 @@
               </span>
             </td>
             <td style="padding:12px 16px">
-              <button
-                v-if="!row.isActive"
-                style="background:rgba(34,197,94,0.1);color:#4ade80;border:none;border-radius:6px;padding:4px 10px;font-size:0.75rem;cursor:pointer;font-weight:500"
-                @click="activateRule(row.id)"
-              >Activate</button>
-              <button
-                v-else
-                style="background:rgba(249,115,22,0.1);color:#f97316;border:none;border-radius:6px;padding:4px 10px;font-size:0.75rem;cursor:pointer;font-weight:500"
-                @click="deactivateRule(row.id)"
-              >Deactivate</button>
+              <div style="display:flex;gap:6px;align-items:center">
+                <button
+                  v-if="!row.isActive"
+                  style="background:rgba(34,197,94,0.1);color:#4ade80;border:none;border-radius:6px;padding:4px 10px;font-size:0.75rem;cursor:pointer;font-weight:500"
+                  @click="activateRule(row.id)"
+                >Activate</button>
+                <button
+                  v-else
+                  style="background:rgba(249,115,22,0.1);color:#f97316;border:none;border-radius:6px;padding:4px 10px;font-size:0.75rem;cursor:pointer;font-weight:500"
+                  @click="deactivateRule(row.id)"
+                >Deactivate</button>
+                <button
+                  style="background:rgba(255,255,255,0.04);color:#52525b;border:none;border-radius:6px;padding:4px 8px;font-size:0.72rem;cursor:pointer"
+                  title="View rule execution log"
+                  @click="openRuleLog(row)"
+                >Log</button>
+              </div>
             </td>
           </tr>
           <tr v-if="filteredRules.length === 0">
@@ -95,6 +109,40 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Rule execution log modal -->
+    <UModal v-model="showRuleLog">
+      <div style="background:#1a1a1a;border-radius:12px;overflow:hidden;min-width:560px">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #222">
+          <div>
+            <h3 style="margin:0;font-size:0.9rem;font-weight:600;color:#fff">Rule Execution Log</h3>
+            <p style="margin:2px 0 0;font-size:0.75rem;color:#52525b">{{ selectedRule?.name }}</p>
+          </div>
+          <button style="background:transparent;border:none;color:#52525b;cursor:pointer" @click="showRuleLog = false">
+            <UIcon name="i-heroicons-x-mark" class="w-5 h-5" />
+          </button>
+        </div>
+        <div style="max-height:400px;overflow-y:auto;padding:12px 0">
+          <div v-if="ruleLogPending" style="padding:24px;text-align:center;color:#71717a;font-size:0.875rem">Loading…</div>
+          <template v-else-if="ruleLog.length > 0">
+            <div
+              v-for="entry in ruleLog"
+              :key="entry.id"
+              style="display:grid;grid-template-columns:140px 80px 1fr;gap:8px;padding:8px 18px;border-bottom:1px solid #1a1a1a;font-size:0.8rem"
+            >
+              <span style="color:#52525b">{{ formatLogTime(entry.occurredAt) }}</span>
+              <span :style="logResultStyle(entry.payload)" style="border-radius:4px;padding:1px 6px;font-size:0.7rem;font-weight:600;text-align:center">
+                {{ (entry.payload as Record<string,unknown>)['result'] }}
+              </span>
+              <span style="color:#a3a3a3">{{ logDetail(entry.payload) }}</span>
+            </div>
+          </template>
+          <div v-else style="padding:24px;text-align:center;color:#71717a;font-size:0.875rem">
+            No executions recorded yet for this rule.
+          </div>
+        </div>
+      </div>
+    </UModal>
 
     <!-- Template browser -->
     <RuleTemplatesBrowser v-model="showTemplates" @use="applyTemplate" />
@@ -153,6 +201,10 @@ const { api } = useApi();
 const showCreate = ref(false);
 const showTemplates = ref(false);
 const showAiAssist = ref(false);
+const showRuleLog = ref(false);
+const selectedRule = ref<RuleResponse | null>(null);
+const ruleLogPending = ref(false);
+const ruleLog = ref<Array<{ id: string; payload: unknown; occurredAt: string }>>([]);
 const nlDescription = ref('');
 const aiLoading = ref(false);
 const newRule = ref<Record<string, unknown>>({});
@@ -214,6 +266,48 @@ async function generateRule() {
 function onSaved() {
   showCreate.value = false;
   void refresh();
+}
+
+async function openRuleLog(rule: RuleResponse) {
+  selectedRule.value = rule;
+  showRuleLog.value = true;
+  ruleLogPending.value = true;
+  try {
+    ruleLog.value = await api<Array<{ id: string; payload: unknown; occurredAt: string }>>(
+      `/api/v1/audit-log/rule-log/${rule.id}`,
+    );
+  } finally {
+    ruleLogPending.value = false;
+  }
+}
+
+function isParseError(rule: RuleResponse): boolean {
+  if (!rule.body || typeof rule.body !== 'object') return true;
+  const body = rule.body as Record<string, unknown>;
+  if (rule.engine === 'reactive') return !Array.isArray(body['conditions']) || !Array.isArray(body['actions']);
+  if (rule.engine === 'validation') return !Array.isArray(body['conditions']);
+  if (rule.engine === 'policy') return !Array.isArray(body['conditions']);
+  if (rule.engine === 'decision') return !Array.isArray(body['rows']);
+  return false;
+}
+
+function formatLogTime(iso: string) {
+  return new Date(iso).toLocaleString('en-KE', { dateStyle: 'short', timeStyle: 'short' });
+}
+
+function logResultStyle(payload: unknown): string {
+  const result = (payload as Record<string, unknown>)['result'];
+  if (result === 'fired' || result === 'passed') return 'background:rgba(34,197,94,0.12);color:#4ade80';
+  if (result === 'failed' || result === 'denied') return 'background:rgba(239,68,68,0.12);color:#f87171';
+  return 'background:rgba(113,113,122,0.12);color:#71717a';
+}
+
+function logDetail(payload: unknown): string {
+  const p = payload as Record<string, unknown>;
+  if (p['errorMessage']) return p['errorMessage'] as string;
+  if (p['reason']) return p['reason'] as string;
+  if (p['trigger']) return `trigger: ${p['trigger']}`;
+  return '—';
 }
 
 function engineColor(engine: string) {

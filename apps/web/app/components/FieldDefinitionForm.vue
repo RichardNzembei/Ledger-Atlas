@@ -1,9 +1,9 @@
 <template>
   <form class="space-y-4" @submit.prevent="onSubmit">
     <UFormGroup label="Field Key" name="fieldKey" required>
-      <UInput v-model="form.fieldKey" placeholder="warranty_expiry" />
+      <UInput v-model="form.fieldKey" placeholder="warranty_expiry" :disabled="!!fieldId" />
       <template #hint>
-        <span class="text-xs text-gray-500">snake_case, used in API and custom field storage</span>
+        <span class="text-xs text-gray-500">snake_case, used in API and custom field storage{{ fieldId ? ' (immutable)' : '' }}</span>
       </template>
     </UFormGroup>
 
@@ -13,19 +13,25 @@
 
     <div class="grid grid-cols-2 gap-4">
       <UFormGroup label="Type" name="dataType" required>
-        <USelect v-model="form.dataType" :options="dataTypes" value-attribute="value" option-attribute="label" />
+        <USelect v-model="form.dataType" :options="dataTypes" value-attribute="value" option-attribute="label" :disabled="!!fieldId" />
       </UFormGroup>
       <UFormGroup label="Section" name="section">
         <UInput v-model="form.section" placeholder="General" />
       </UFormGroup>
     </div>
 
-    <div class="grid grid-cols-2 gap-4">
+    <div class="grid grid-cols-3 gap-4">
       <UFormGroup label="Display Order" name="displayOrder">
         <UInput v-model.number="form.displayOrder" type="number" min="0" />
       </UFormGroup>
       <UFormGroup label="Required" name="isRequired">
         <UToggle v-model="form.isRequired" />
+      </UFormGroup>
+      <UFormGroup label="Indexed" name="isIndexed">
+        <UToggle v-model="form.isIndexed" />
+        <template #hint>
+          <span class="text-xs text-gray-500">Faster filtering in reports</span>
+        </template>
       </UFormGroup>
     </div>
 
@@ -44,29 +50,37 @@
 
     <div class="flex gap-3 justify-end">
       <UButton type="button" variant="ghost" @click="$emit('cancel')">Cancel</UButton>
-      <UButton type="submit" :loading="loading">Add Field</UButton>
+      <UButton type="submit" :loading="loading">{{ fieldId ? 'Update Field' : 'Add Field' }}</UButton>
     </div>
   </form>
 </template>
 
 <script setup lang="ts">
 import { CreateFieldDefinitionRequest } from '@inventory/contracts';
+import type { FieldDefinitionResponse } from '@inventory/contracts';
 
-const props = defineProps<{ entityType: string }>();
+const props = defineProps<{
+  entityType: string;
+  fieldId?: string;
+  initialValues?: Partial<FieldDefinitionResponse>;
+}>();
 const emit = defineEmits<{ saved: []; cancel: [] }>();
 
 const { api } = useApi();
 const loading = ref(false);
 const error = ref('');
-const enumOptions = ref<Array<{ value: string; label: string }>>([]);
+const enumOptions = ref<Array<{ value: string; label: string }>>(
+  (props.initialValues?.config?.options as Array<{ value: string; label: string }> | undefined) ?? [],
+);
 
 const form = reactive({
-  fieldKey: '',
-  label: '',
-  dataType: 'string' as const,
-  section: '',
-  displayOrder: 0,
-  isRequired: false,
+  fieldKey: props.initialValues?.fieldKey ?? '',
+  label: props.initialValues?.label ?? '',
+  dataType: (props.initialValues?.dataType ?? 'string') as string,
+  section: props.initialValues?.section ?? '',
+  displayOrder: props.initialValues?.displayOrder ?? 0,
+  isRequired: props.initialValues?.isRequired ?? false,
+  isIndexed: props.initialValues?.isIndexed ?? false,
 });
 
 const dataTypes = [
@@ -84,21 +98,34 @@ async function onSubmit() {
   const config: Record<string, unknown> = {};
   if (form.dataType === 'enum') config['options'] = enumOptions.value;
 
-  const parsed = CreateFieldDefinitionRequest.safeParse({
-    ...form,
-    entityType: props.entityType,
-    config,
-  });
-
-  if (!parsed.success) {
-    error.value = parsed.error.issues[0]?.message ?? 'Validation failed';
-    return;
-  }
-
   loading.value = true;
   error.value = '';
+
   try {
-    await api('/api/v1/metadata/fields', { method: 'POST', body: parsed.data });
+    if (props.fieldId) {
+      await api(`/api/v1/metadata/fields/${props.fieldId}`, {
+        method: 'PATCH',
+        body: {
+          label: form.label,
+          config,
+          isRequired: form.isRequired,
+          isIndexed: form.isIndexed,
+          displayOrder: form.displayOrder,
+          section: form.section || null,
+        },
+      });
+    } else {
+      const parsed = CreateFieldDefinitionRequest.safeParse({
+        ...form,
+        entityType: props.entityType,
+        config,
+      });
+      if (!parsed.success) {
+        error.value = parsed.error.issues[0]?.message ?? 'Validation failed';
+        return;
+      }
+      await api('/api/v1/metadata/fields', { method: 'POST', body: parsed.data });
+    }
     emit('saved');
   } catch (e: unknown) {
     error.value = (e as Error).message ?? 'Failed to save field';

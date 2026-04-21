@@ -15,6 +15,7 @@ import { paymentsRouter } from './modules/payments/payments.router.js';
 import { locationsRouter } from './modules/locations/locations.router.js';
 import { assetsRouter } from './modules/assets/assets.router.js';
 import { salesRouter } from './modules/sales/sales.router.js';
+import { auditRouter } from './modules/audit/audit.router.js';
 import { config } from './config/index.js';
 import { logger } from './infra/logger.js';
 
@@ -74,6 +75,7 @@ export function createApp() {
   app.use('/api/v1/locations', locationsRouter);
   app.use('/api/v1/assets', assetsRouter);
   app.use('/api/v1/sales', salesRouter);
+  app.use('/api/v1/audit-log', auditRouter);
 
   app.use(errorHandler);
 
