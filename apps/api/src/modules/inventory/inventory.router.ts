@@ -5,8 +5,10 @@ import {
   AdjustStockRequest,
   StockLevelQuery,
 } from '@inventory/contracts/inventory';
+import { UnauthorizedError } from '@inventory/domain/errors';
 import { inventoryService } from './inventory.service.js';
 import { requireRole } from '../../middleware/requireRole.js';
+import { checkPolicy } from '../../infra/ruleEnforcer.js';
 
 export const inventoryRouter = Router();
 
@@ -64,6 +66,22 @@ inventoryRouter.post(
   async (req, res, next) => {
     try {
       const body = AdjustStockRequest.parse(req.body);
+
+      // Policy check: stocktake variance escalation (recipe 6) and any other stock.adjust policies
+      for (const item of body.items) {
+        const decision = await checkPolicy(req.context.tenantId, 'stock.adjust', {
+          'subject.roles': req.context.roles,
+          'subject.userId': req.context.userIdHex,
+          'resource.location_id': body.locationId,
+          'resource.product_id': item.productId,
+          'resource.counted_qty': item.countedQty,
+          'resource.reason': item.reason ?? '',
+        });
+        if (!decision.allowed) {
+          throw new UnauthorizedError(decision.reason ?? 'stock.adjust denied by policy');
+        }
+      }
+
       await inventoryService.adjustStock(req.context.tenantId, body, req.context.userId);
       res.status(201).json({ ok: true });
     } catch (err) {
