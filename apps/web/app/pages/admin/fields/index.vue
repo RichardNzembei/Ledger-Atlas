@@ -3,12 +3,21 @@
     <!-- Header -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
       <h1 style="font-size:1.25rem;font-weight:700;color:#fff;margin:0">Custom Fields</h1>
-      <button
-        style="background:#f97316;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:0.875rem;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px"
-        @click="showCreate = true"
-      >
-        <span style="font-size:1rem;line-height:1">+</span> Add Field
-      </button>
+      <div style="display:flex;gap:8px">
+        <button
+          style="background:#1a1a1a;color:#a3a3a3;border:1px solid #2a2a2a;border-radius:8px;padding:8px 14px;font-size:0.875rem;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px"
+          @click="showTemplates = true"
+        >
+          <UIcon name="i-heroicons-document-duplicate" class="w-4 h-4" />
+          Templates
+        </button>
+        <button
+          style="background:#f97316;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:0.875rem;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px"
+          @click="showCreate = true"
+        >
+          <span style="font-size:1rem;line-height:1">+</span> Add Field
+        </button>
+      </div>
     </div>
 
     <!-- Entity type filter -->
@@ -76,6 +85,9 @@
       </table>
     </div>
 
+    <!-- Field templates browser -->
+    <FieldTemplatesBrowser v-model="showTemplates" @installed="onInstalled" />
+
     <!-- Create field modal -->
     <UModal v-model="showCreate">
       <div style="background:#1a1a1a;border-radius:12px;overflow:hidden">
@@ -97,6 +109,7 @@ definePageMeta({ layout: 'admin' });
 
 const { api } = useApi();
 const showCreate = ref(false);
+const showTemplates = ref(false);
 const entityType = ref('product');
 
 const entityTypes = [
@@ -123,6 +136,10 @@ async function deleteField(id: string) {
 
 function onSaved() {
   showCreate.value = false;
+  void refresh();
+}
+
+function onInstalled() {
   void refresh();
 }
 

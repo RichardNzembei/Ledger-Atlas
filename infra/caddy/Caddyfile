@@ -1,16 +1,5 @@
-your-domain.com {
-    # Admin UI and POS (Nuxt SSR)
-    reverse_proxy web:3000
-
-    # API (prefixed routes go to Express)
-    handle /api/* {
-        reverse_proxy api:4000
-    }
-
-    # Health check endpoint
-    handle /health {
-        reverse_proxy api:4000
-    }
+api.your-domain.com {
+    reverse_proxy api:4000
 
     encode gzip
 

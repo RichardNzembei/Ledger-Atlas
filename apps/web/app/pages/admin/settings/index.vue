@@ -3,12 +3,21 @@
     <!-- Header -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
       <h1 style="font-size:1.25rem;font-weight:700;color:#fff;margin:0">Settings</h1>
-      <button
-        style="background:#f97316;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:0.875rem;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px"
-        @click="startCreate"
-      >
-        <span style="font-size:1rem;line-height:1">+</span> Add Setting
-      </button>
+      <div style="display:flex;gap:8px">
+        <button
+          style="background:#1a1a1a;color:#a3a3a3;border:1px solid #2a2a2a;border-radius:8px;padding:8px 14px;font-size:0.875rem;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px"
+          @click="showPacks = true"
+        >
+          <UIcon name="i-heroicons-squares-2x2" class="w-4 h-4" />
+          Starter Packs
+        </button>
+        <button
+          style="background:#f97316;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:0.875rem;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px"
+          @click="startCreate"
+        >
+          <span style="font-size:1rem;line-height:1">+</span> Add Setting
+        </button>
+      </div>
     </div>
 
     <!-- Scope filter -->
@@ -76,6 +85,9 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Starter packs browser -->
+    <SettingsPacksBrowser v-model="showPacks" @installed="fetch" />
 
     <!-- Create / Edit modal -->
     <UModal v-model="showModal">
@@ -181,6 +193,7 @@ definePageMeta({ layout: 'admin' });
 const { api } = useApi();
 const scopeType = ref('');
 const showModal = ref(false);
+const showPacks = ref(false);
 const saving = ref(false);
 const formError = ref('');
 const editing = ref<string | null>(null);

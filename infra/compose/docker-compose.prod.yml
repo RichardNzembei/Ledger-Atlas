@@ -18,15 +18,6 @@ services:
       timeout: 5s
       retries: 5
 
-  web:
-    image: ghcr.io/${REPO}/web:${IMAGE_TAG:-latest}
-    restart: unless-stopped
-    ports:
-      - "127.0.0.1:3000:3000"
-    env_file: .env
-    depends_on:
-      - api
-
   mysql:
     image: mysql:8.0
     restart: unless-stopped
@@ -70,7 +61,6 @@ services:
       - caddy-config:/config
     depends_on:
       - api
-      - web
 
 volumes:
   mysql-data:
