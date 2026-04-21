@@ -11,7 +11,7 @@ import { uuidv7, uuidToBinary, binaryToUuid } from '@inventory/domain/utils';
 import { db } from '../../infra/db.js';
 import { checkValidation } from '../../infra/ruleEnforcer.js';
 
-export const customersRouter = Router();
+export const customersRouter: Router = Router();
 
 customersRouter.get('/', async (req, res, next) => {
   try {
@@ -113,7 +113,7 @@ customersRouter.post('/', async (req, res, next) => {
 
 customersRouter.get('/:id', async (req, res, next) => {
   try {
-    const id = uuidToBinary(req.params['id']!);
+    const id = uuidToBinary((req.params['id'] as string));
     const rows = await db
       .select()
       .from(customers)
@@ -121,7 +121,7 @@ customersRouter.get('/:id', async (req, res, next) => {
       .where(and(eq(customers.id, id), eq(customers.tenantId, req.context.tenantId)))
       .limit(1);
 
-    if (!rows[0]) throw new NotFoundError('Customer', req.params['id']!);
+    if (!rows[0]) throw new NotFoundError('Customer', (req.params['id'] as string));
     res.json(toResponse(rows[0]));
   } catch (err) {
     next(err);
@@ -130,7 +130,7 @@ customersRouter.get('/:id', async (req, res, next) => {
 
 customersRouter.patch('/:id', async (req, res, next) => {
   try {
-    const id = uuidToBinary(req.params['id']!);
+    const id = uuidToBinary((req.params['id'] as string));
     const tenantId = req.context.tenantId;
     const body = UpdateCustomerRequest.parse(req.body);
 
@@ -140,7 +140,7 @@ customersRouter.patch('/:id', async (req, res, next) => {
       .where(and(eq(customers.id, id), eq(customers.tenantId, tenantId)))
       .limit(1);
 
-    if (!existing[0]) throw new NotFoundError('Customer', req.params['id']!);
+    if (!existing[0]) throw new NotFoundError('Customer', (req.params['id'] as string));
 
     const updates: Record<string, unknown> = {};
     if (body.name !== undefined) updates['name'] = body.name;

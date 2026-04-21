@@ -28,7 +28,7 @@ export class InventoryService {
         productId: item.productId,
         locationId: body.locationId,
         quantity: item.quantity,
-        poItemId: item.poItemId,
+        poItemId: body.poItemId,
         at: new Date().toISOString(),
       };
 

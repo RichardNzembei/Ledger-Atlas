@@ -9,7 +9,7 @@ import { eventBus } from '../../infra/eventBus.js';
 import { EventTypes } from '@inventory/events';
 import { requireRole } from '../../middleware/requireRole.js';
 
-export const assetsRouter = Router();
+export const assetsRouter: Router = Router();
 
 assetsRouter.get('/', async (req, res, next) => {
   try {
@@ -107,14 +107,14 @@ assetsRouter.post('/', requireRole('admin', 'manager', 'asset_manager'), async (
 
 assetsRouter.get('/:id', async (req, res, next) => {
   try {
-    const id = uuidToBinary(req.params['id']!);
+    const id = uuidToBinary((req.params['id'] as string));
     const rows = await db
       .select()
       .from(assets)
       .leftJoin(assetExtensions, eq(assets.id, assetExtensions.assetId))
       .where(and(eq(assets.id, id), eq(assets.tenantId, req.context.tenantId)))
       .limit(1);
-    if (!rows[0]) throw new NotFoundError('Asset', req.params['id']!);
+    if (!rows[0]) throw new NotFoundError('Asset', (req.params['id'] as string));
     res.json(toResponse(rows[0]));
   } catch (err) {
     next(err);
@@ -123,7 +123,7 @@ assetsRouter.get('/:id', async (req, res, next) => {
 
 assetsRouter.patch('/:id', requireRole('admin', 'manager', 'asset_manager'), async (req, res, next) => {
   try {
-    const id = uuidToBinary(req.params['id']!);
+    const id = uuidToBinary((req.params['id'] as string));
     const tenantId = req.context.tenantId;
     const body = UpdateAssetRequest.parse(req.body);
 
@@ -132,7 +132,7 @@ assetsRouter.patch('/:id', requireRole('admin', 'manager', 'asset_manager'), asy
       .from(assets)
       .where(and(eq(assets.id, id), eq(assets.tenantId, tenantId)))
       .limit(1);
-    if (!existing[0]) throw new NotFoundError('Asset', req.params['id']!);
+    if (!existing[0]) throw new NotFoundError('Asset', (req.params['id'] as string));
 
     await db.transaction(async (tx) => {
       const updates: Record<string, unknown> = {};
@@ -174,7 +174,7 @@ assetsRouter.patch('/:id', requireRole('admin', 'manager', 'asset_manager'), asy
 
 assetsRouter.post('/:id/assign', requireRole('admin', 'manager', 'asset_manager'), async (req, res, next) => {
   try {
-    const id = uuidToBinary(req.params['id']!);
+    const id = uuidToBinary((req.params['id'] as string));
     const tenantId = req.context.tenantId;
     const body = AssignAssetRequest.parse(req.body);
 
@@ -183,7 +183,7 @@ assetsRouter.post('/:id/assign', requireRole('admin', 'manager', 'asset_manager'
       .from(assets)
       .where(and(eq(assets.id, id), eq(assets.tenantId, tenantId)))
       .limit(1);
-    if (!existing[0]) throw new NotFoundError('Asset', req.params['id']!);
+    if (!existing[0]) throw new NotFoundError('Asset', (req.params['id'] as string));
 
     await db.update(assets).set({
       assignedToUserId: uuidToBinary(body.userId),

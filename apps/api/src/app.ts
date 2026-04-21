@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { type Express } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import { pinoHttp } from 'pino-http';
@@ -18,7 +18,7 @@ import { salesRouter } from './modules/sales/sales.router.js';
 import { config } from './config/index.js';
 import { logger } from './infra/logger.js';
 
-export function createApp() {
+export function createApp(): Express {
   const app = express();
 
   app.set('trust proxy', 1);

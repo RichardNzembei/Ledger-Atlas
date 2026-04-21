@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { LoginRequest, RefreshRequest, RegisterTenantRequest } from '@inventory/contracts/auth';
 import { authService } from './auth.service.js';
 
-export const authRouter = Router();
+export const authRouter: Router = Router();
 
 authRouter.post('/login', async (req, res, next) => {
   try {
