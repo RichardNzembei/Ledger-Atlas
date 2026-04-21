@@ -3,7 +3,7 @@ import { and, desc, eq, inArray } from 'drizzle-orm';
 import { domainEvents } from '@inventory/db/schema';
 import { db } from '../../infra/db.js';
 
-export const auditRouter = Router();
+export const auditRouter: Router = Router();
 
 const AUDIT_TYPES = [
   'field.created', 'field.updated', 'field.activated', 'field.deactivated',
