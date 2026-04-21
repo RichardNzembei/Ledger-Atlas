@@ -97,7 +97,7 @@ metadataRouter.post('/fields', requireAdmin, async (req, res, next) => {
 
 metadataRouter.patch('/fields/:id', requireAdmin, async (req, res, next) => {
   try {
-    const id = uuidToBinary(req.params['id']!);
+    const id = uuidToBinary((req.params['id'] as string));
     const body = UpdateFieldDefinitionRequest.parse(req.body);
 
     const existing = await db
@@ -105,7 +105,7 @@ metadataRouter.patch('/fields/:id', requireAdmin, async (req, res, next) => {
       .from(fieldDefinitions)
       .where(and(eq(fieldDefinitions.id, id), eq(fieldDefinitions.tenantId, req.context.tenantId)))
       .limit(1);
-    if (!existing[0]) throw new NotFoundError('FieldDefinition', req.params['id']!);
+    if (!existing[0]) throw new NotFoundError('FieldDefinition', (req.params['id'] as string));
 
     const updates: Record<string, unknown> = {};
     if (body.label !== undefined) updates['label'] = body.label;
@@ -137,7 +137,7 @@ metadataRouter.patch('/fields/:id', requireAdmin, async (req, res, next) => {
 
 metadataRouter.delete('/fields/:id', requireAdmin, async (req, res, next) => {
   try {
-    const id = uuidToBinary(req.params['id']!);
+    const id = uuidToBinary((req.params['id'] as string));
     const existing = await db
       .select()
       .from(fieldDefinitions)
@@ -248,7 +248,7 @@ metadataRouter.post('/rules/:id/activate', requireAdmin, async (req, res, next) 
 
 metadataRouter.post('/rules/:id/deactivate', requireAdmin, async (req, res, next) => {
   try {
-    const id = uuidToBinary(req.params['id']!);
+    const id = uuidToBinary((req.params['id'] as string));
     const existing = await db
       .select()
       .from(ruleDefinitions)
