@@ -1,5 +1,5 @@
 import { and, eq } from 'drizzle-orm';
-import { ruleDefinitions } from '@inventory/db/schema';
+import { ruleDefinitions, domainEvents } from '@inventory/db/schema';
 import {
   RuleRegistry,
   ValidationRuleEvaluator,
@@ -8,7 +8,7 @@ import {
   RuleDefinitionSchema,
 } from '@inventory/rules';
 import type { ValidationOutput, PolicyOutput, DecisionOutput } from '@inventory/rules';
-import { binaryToUuid } from '@inventory/domain/utils';
+import { binaryToUuid, uuidv7, uuidToBinary } from '@inventory/domain/utils';
 import { db } from './db.js';
 import { settingsService } from '../modules/settings/settings.service.js';
 import { logger } from './logger.js';
@@ -135,6 +135,24 @@ export async function checkValidation(
           allowOverride: result.allowOverride,
           ...(result.overrideRole !== undefined && { overrideRole: result.overrideRole }),
         });
+        void db.insert(domainEvents).values({
+          tenantId,
+          streamType: 'rule_execution',
+          streamId: uuidToBinary(uuidv7()),
+          version: 1,
+          eventType: 'rule.evaluated',
+          payload: {
+            ruleId: rule.id,
+            ruleName: rule.name,
+            engine: 'validation',
+            entity,
+            when,
+            result: 'failed',
+            errorCode: result.errorCode,
+            errorMessage: result.errorMessage,
+          },
+          metadata: {},
+        }).catch(() => undefined);
       }
     } catch (err) {
       logger.error({ ruleId: rule.id, entity, when, err }, '[enforcer] validation rule error');
@@ -177,6 +195,22 @@ export async function checkPolicy(
       const { output } = await registry.evaluate(rule, enrichedFacts);
       const result = output as PolicyOutput;
       if (!result.allowed) {
+        void db.insert(domainEvents).values({
+          tenantId,
+          streamType: 'rule_execution',
+          streamId: uuidToBinary(uuidv7()),
+          version: 1,
+          eventType: 'rule.evaluated',
+          payload: {
+            ruleId: rule.id,
+            ruleName: rule.name,
+            engine: 'policy',
+            action,
+            result: 'denied',
+            reason: result.reason,
+          },
+          metadata: {},
+        }).catch(() => undefined);
         return {
           allowed: false,
           ...(result.reason !== undefined && { reason: result.reason }),

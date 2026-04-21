@@ -84,6 +84,17 @@ export const RuleResponse = z.object({
 });
 export type RuleResponse = z.infer<typeof RuleResponse>;
 
+export const UpdateFieldDefinitionRequest = z.object({
+  label: z.string().min(1).max(255).optional(),
+  config: FieldConfig.optional(),
+  isRequired: z.boolean().optional(),
+  isIndexed: z.boolean().optional(),
+  isActive: z.boolean().optional(),
+  displayOrder: z.number().int().optional(),
+  section: z.string().max(100).nullable().optional(),
+});
+export type UpdateFieldDefinitionRequest = z.infer<typeof UpdateFieldDefinitionRequest>;
+
 export const ActivateRuleRequest = z.object({
   ruleId: z.string().uuid(),
 });
