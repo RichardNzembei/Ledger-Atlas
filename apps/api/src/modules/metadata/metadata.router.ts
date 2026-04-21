@@ -10,6 +10,7 @@ import { NotFoundError, DomainError } from '@inventory/domain/errors';
 import { uuidv7, uuidToBinary, binaryToUuid } from '@inventory/domain/utils';
 import { db } from '../../infra/db.js';
 import { reloadRules } from '../../infra/rulesListener.js';
+import { invalidateEnforcerCache } from '../../infra/ruleEnforcer.js';
 import { requireAdmin } from '../../middleware/requireRole.js';
 
 export const metadataRouter = Router();
@@ -155,6 +156,7 @@ metadataRouter.post('/rules/:id/activate', requireAdmin, async (req, res, next) 
       .where(eq(ruleDefinitions.id, id));
 
     await reloadRules();
+    invalidateEnforcerCache(req.context.tenantId);
     res.json({ ok: true });
   } catch (err) {
     next(err);
@@ -169,6 +171,7 @@ metadataRouter.post('/rules/:id/deactivate', requireAdmin, async (req, res, next
       .set({ isActive: false })
       .where(and(eq(ruleDefinitions.id, id), eq(ruleDefinitions.tenantId, req.context.tenantId)));
     await reloadRules();
+    invalidateEnforcerCache(req.context.tenantId);
     res.json({ ok: true });
   } catch (err) {
     next(err);

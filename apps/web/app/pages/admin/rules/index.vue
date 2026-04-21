@@ -3,12 +3,21 @@
     <!-- Header -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
       <h1 style="font-size:1.25rem;font-weight:700;color:#fff;margin:0">Business Rules</h1>
-      <button
-        style="background:#f97316;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:0.875rem;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px"
-        @click="showCreate = true"
-      >
-        <span style="font-size:1rem;line-height:1">+</span> New Rule
-      </button>
+      <div style="display:flex;gap:8px">
+        <button
+          style="background:#1a1a1a;color:#a3a3a3;border:1px solid #2a2a2a;border-radius:8px;padding:8px 14px;font-size:0.875rem;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px"
+          @click="showTemplates = true"
+        >
+          <UIcon name="i-heroicons-document-duplicate" class="w-4 h-4" />
+          Templates
+        </button>
+        <button
+          style="background:#f97316;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:0.875rem;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px"
+          @click="newRule = {}; formKey++; showCreate = true"
+        >
+          <span style="font-size:1rem;line-height:1">+</span> New Rule
+        </button>
+      </div>
     </div>
 
     <!-- Engine tabs -->
@@ -87,6 +96,9 @@
       </table>
     </div>
 
+    <!-- Template browser -->
+    <RuleTemplatesBrowser v-model="showTemplates" @use="applyTemplate" />
+
     <!-- Create rule modal -->
     <UModal v-model="showCreate" :ui="{ width: 'sm:max-w-2xl' }">
       <div style="background:#1a1a1a;border-radius:12px;overflow:hidden">
@@ -123,7 +135,7 @@
             </button>
           </div>
 
-          <RuleForm :initial="newRule" @saved="onSaved" @cancel="showCreate = false" />
+          <RuleForm :key="formKey" :initial="newRule" @saved="onSaved" @cancel="showCreate = false" />
         </div>
       </div>
     </UModal>
@@ -131,17 +143,34 @@
 </template>
 
 <script setup lang="ts">
+import RuleForm from '~/components/RuleForm.vue';
 import type { RuleResponse } from '@inventory/contracts';
+import type { RuleTemplate } from '~/composables/useRuleTemplates';
 
 definePageMeta({ layout: 'admin' });
 
 const { api } = useApi();
 const showCreate = ref(false);
+const showTemplates = ref(false);
 const showAiAssist = ref(false);
 const nlDescription = ref('');
 const aiLoading = ref(false);
-const newRule = ref({});
+const newRule = ref<Record<string, unknown>>({});
+const formKey = ref(0);
 const activeEngine = ref(0);
+
+function applyTemplate(tmpl: RuleTemplate) {
+  newRule.value = {
+    name: tmpl.name,
+    engine: tmpl.engine,
+    triggerEvent: tmpl.triggerEvent ?? '',
+    priority: tmpl.priority,
+    description: tmpl.scenario,
+    body: tmpl.body,
+  };
+  formKey.value++;
+  showCreate.value = true;
+}
 
 const engineTabs = [
   { label: 'All', slot: 'all' },

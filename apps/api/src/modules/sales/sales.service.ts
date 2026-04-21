@@ -1,6 +1,6 @@
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { sales, saleItems, payments, products, stockOnHand } from '@inventory/db/schema';
-import { NotFoundError, ConflictError, InsufficientStockError } from '@inventory/domain/errors';
+import { NotFoundError, ConflictError, InsufficientStockError, ValidationError } from '@inventory/domain/errors';
 import { uuidv7, uuidToBinary, binaryToUuid } from '@inventory/domain/utils';
 import { StockAggregate } from '@inventory/domain/stock';
 import type { StockEvent } from '@inventory/domain/stock';
@@ -15,6 +15,7 @@ import { db } from '../../infra/db.js';
 import { eventStore } from '../../infra/eventStore.js';
 import { eventBus } from '../../infra/eventBus.js';
 import { EventTypes } from '@inventory/events';
+import { checkValidation } from '../../infra/ruleEnforcer.js';
 
 const STOCK_STREAM = 'stock';
 
@@ -42,7 +43,35 @@ export class SalesService {
       if (!product) throw new NotFoundError('Product', item.productId);
 
       const unitPrice = item.unitPrice ?? Number(product.basePrice);
+      const costPrice = Number(product.costPrice);
       const discountPct = item.discountPct ?? 0;
+
+      // Look up available stock for this item at the sale location
+      const [sohRow] = await db
+        .select({ quantity: stockOnHand.quantity, reserved: stockOnHand.reserved })
+        .from(stockOnHand)
+        .where(and(eq(stockOnHand.tenantId, tenantId), eq(stockOnHand.productId, uuidToBinary(item.productId)), eq(stockOnHand.locationId, locationIdBuf)))
+        .limit(1);
+      const availableQty = sohRow ? Number(sohRow.quantity) - Number(sohRow.reserved) : 0;
+      const resultingQty = availableQty - item.quantity;
+
+      // sale_line validation rules: negative stock (recipe 4), negative margin (recipe 9)
+      const violations = await checkValidation(tenantId, 'sale_line', 'create', {
+        product_id: item.productId,
+        quantity: item.quantity,
+        unit_price: unitPrice,
+        available_quantity: availableQty,
+        resulting_quantity: resultingQty,
+        'product.cost_price': costPrice,
+        'product.name': product.name,
+        'product.sku': product.sku,
+        'location.id': body.locationId,
+      });
+      if (violations.length > 0) {
+        const v = violations[0]!;
+        throw new ValidationError(v.errorMessage ?? 'Sale line validation failed', v.errorCode ? { rule: v.errorCode } : undefined);
+      }
+
       const discountAmt = (unitPrice * item.quantity * discountPct) / 100;
       // 16% VAT if product has a tax class, else 0
       const taxPct = product.taxClass ? 16 : 0;

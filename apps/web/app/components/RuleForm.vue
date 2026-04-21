@@ -46,7 +46,9 @@ const { api } = useApi();
 const loading = ref(false);
 const error = ref('');
 const bodyError = ref('');
-const bodyJson = ref('{}');
+const bodyJson = ref(
+  props.initial?.body ? JSON.stringify(props.initial.body, null, 2) : '{}',
+);
 
 const form = reactive({
   name: '',
