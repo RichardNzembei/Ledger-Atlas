@@ -1,5 +1,5 @@
 {
   "installCommand": "pnpm install --frozen-lockfile",
-  "buildCommand": "pnpm --filter @inventory/web build",
+  "buildCommand": "pnpm --filter @inventory/contracts build && pnpm --filter @inventory/web build",
   "outputDirectory": "apps/web/.vercel/output"
 }
