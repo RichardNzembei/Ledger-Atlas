@@ -109,5 +109,7 @@ const navItems = [
   { to: '/admin/rules', label: 'Rules', icon: 'i-heroicons-bolt' },
   { to: '/admin/fields', label: 'Custom Fields', icon: 'i-heroicons-adjustments-horizontal' },
   { to: '/admin/settings', label: 'Settings', icon: 'i-heroicons-cog-6-tooth' },
+  { to: '/admin/audit', label: 'Audit Log', icon: 'i-heroicons-clipboard-document-list' },
+  { to: '/admin/logs', label: 'Rule Logs', icon: 'i-heroicons-document-text' },
 ];
 </script>
