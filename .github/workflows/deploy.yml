@@ -26,7 +26,7 @@ jobs:
 
       - uses: ariga/setup-atlas@v0
 
-      - name: Apply migrations (prod)
+      - name: Apply migrations
         env:
           DB_URL: ${{ secrets.PROD_DB_URL }}
           ATLAS_DEV_URL: docker://mysql/8/dev
@@ -35,53 +35,29 @@ jobs:
             --env prod \
             --lock-timeout 30s
 
-  build:
-    name: Build & Push Docker Images
+  deploy:
+    name: Deploy to Droplet
     runs-on: ubuntu-latest
     needs: migrate
-    outputs:
-      image-tag: ${{ steps.meta.outputs.version }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Docker metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository }}/api
-          tags: type=sha,prefix=,suffix=,format=short
-
-      - name: Build API image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: infra/docker/api.Dockerfile
-          push: true
-          tags: ghcr.io/${{ github.repository }}/api:${{ steps.meta.outputs.version }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  deploy:
-    name: Deploy to Server
-    runs-on: ubuntu-latest
-    needs: build
     environment: ${{ inputs.environment || 'production' }}
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
+          username: root
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
-            cd /opt/inventory-platform
-            IMAGE_TAG=${{ needs.build.outputs.image-tag }} docker compose pull api
-            IMAGE_TAG=${{ needs.build.outputs.image-tag }} docker compose up -d --no-deps --remove-orphans api
-            docker system prune -f
+            set -e
+            export PATH="$HOME/.local/share/pnpm:$PATH"
+
+            cd /opt/ledger-atlas
+            git fetch origin main
+            git reset --hard origin/main
+
+            pnpm install --frozen-lockfile
+            pnpm --filter @inventory/api build
+
+            pm2 reload ecosystem.config.js --env production 2>/dev/null \
+              || pm2 start ecosystem.config.js --env production
+            pm2 save
