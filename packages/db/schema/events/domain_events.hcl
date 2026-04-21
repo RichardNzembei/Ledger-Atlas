@@ -1,13 +1,40 @@
 table "domain_events" {
   schema = schema.inventory
 
-  column "id"          { null = false  type = bigint  auto_increment = true  unsigned = true }
-  column "tenant_id"   { null = false  type = binary(16) }
-  column "stream_type" { null = false  type = varchar(50)  comment = "e.g. stock, order, asset" }
-  column "stream_id"   { null = false  type = binary(16) }
-  column "version"     { null = false  type = int  unsigned = true  comment = "Per-stream monotonic version" }
-  column "event_type"  { null = false  type = varchar(100)  comment = "e.g. StockReceived, SaleCompleted" }
-  column "payload"     { null = false  type = json }
+  column "id" {
+    null = false
+    type = bigint
+    auto_increment = true
+    unsigned = true
+  }
+  column "tenant_id" {
+    null = false
+    type = binary(16)
+  }
+  column "stream_type" {
+    null = false
+    type = varchar(50)
+    comment = "e.g. stock, order, asset"
+  }
+  column "stream_id" {
+    null = false
+    type = binary(16)
+  }
+  column "version" {
+    null = false
+    type = int
+    unsigned = true
+    comment = "Per-stream monotonic version"
+  }
+  column "event_type" {
+    null = false
+    type = varchar(100)
+    comment = "e.g. StockReceived, SaleCompleted"
+  }
+  column "payload" {
+    null = false
+    type = json
+  }
   column "metadata"    {
     null    = false
     type    = json
